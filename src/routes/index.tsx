@@ -1,8 +1,10 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
 import { useQuery } from '@tanstack/react-query'
 import { Mail, Lock, MoreVertical } from 'lucide-react'
 import { userService } from '../services/UserService'
+import { formSchema, type FormSchema } from '../schemas/formSchema'
 import Input from '../components/Input'
 import Select from '../components/Select'
 import Checkbox from '../components/Checkbox'
@@ -32,6 +34,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '../components/DropdownMenu'
+import DynamicTable from '../components/DynamicTable'
 
 export const Route = createFileRoute('/')({
   component: App,
@@ -40,7 +43,8 @@ export const Route = createFileRoute('/')({
 function App() {
   const { data: users, isLoading } = useQuery(userService.getAllOptions())
 
-  const { control, handleSubmit } = useForm({
+  const { control, handleSubmit } = useForm<FormSchema>({
+    resolver: zodResolver(formSchema),
     defaultValues: {
       email: '',
       password: '',
@@ -50,10 +54,11 @@ function App() {
       department: [],
       themeColor: '#000000',
       appointment: '',
+      expenses: [{ description: 'Office Supplies', amount: '50', category: 'supplies' }]
     },
   })
 
-  const onSubmit = (data: any) => {
+  const onSubmit = (data: FormSchema) => {
     console.log(data)
     alert(JSON.stringify(data, null, 2))
   }
@@ -75,13 +80,6 @@ function App() {
               placeholder="Enter your email"
               type="email"
               icon={Mail}
-              rules={{
-                required: 'Email is required',
-                pattern: {
-                  value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                  message: 'Invalid email address',
-                },
-              }}
             />
             <Input
               name="password"
@@ -90,13 +88,6 @@ function App() {
               placeholder="Enter your password"
               type="password"
               icon={Lock}
-              rules={{
-                required: 'Password is required',
-                minLength: {
-                  value: 6,
-                  message: 'Password must be at least 6 characters',
-                },
-              }}
             />
             <RadioGroup
               name="gender"
@@ -107,7 +98,6 @@ function App() {
                 { label: 'Female', value: 'female' },
                 { label: 'Other', value: 'other' },
               ]}
-              rules={{ required: 'Please select a gender' }}
               direction="row"
             />
             <Select
@@ -120,7 +110,6 @@ function App() {
                 { label: 'Admin', value: 'admin' },
                 { label: 'Manager', value: 'manager' },
               ]}
-              rules={{ required: 'Please select a role' }}
             />
             <Chips
               name="department"
@@ -132,26 +121,22 @@ function App() {
                 { label: 'Marketing', value: 'marketing' },
                 { label: 'Sales', value: 'sales' },
               ]}
-              rules={{ required: 'Please select at least one department' }}
               multiple={true}
             />
             <ColorInput
               name="themeColor"
               control={control}
               label="Theme Color"
-              rules={{ required: 'Theme color is required' }}
             />
             <DateTimePicker
               name="appointment"
               control={control}
               label="Appointment Time"
-              rules={{ required: 'Please select an appointment time' }}
             />
             <Checkbox
               name="terms"
               control={control}
               label="I accept the terms and conditions"
-              rules={{ required: 'You must accept the terms' }}
             />
             <CardFooter className="px-0 pb-0 pt-4">
               <button
@@ -164,6 +149,62 @@ function App() {
           </form>
         </CardContent>
       </Card>
+
+      <div className="w-full max-w-4xl mt-8">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-xl font-semibold text-center">Expense Report</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <DynamicTable
+              control={control}
+              name="expenses"
+              label="Expenses"
+              defaultValues={{ description: '', amount: '', category: '' }}
+              columns={[
+                {
+                  header: 'Description',
+                  cell: (index) => (
+                    <Input
+                      control={control}
+                      name={`expenses.${index}.description`}
+                      placeholder="Expense description"
+                    />
+                  ),
+                },
+                {
+                  header: 'Amount',
+                  width: '150px',
+                  cell: (index) => (
+                    <Input
+                      control={control}
+                      name={`expenses.${index}.amount`}
+                      type="number"
+                      placeholder="0.00"
+                    />
+                  ),
+                },
+                {
+                  header: 'Category',
+                  width: '200px',
+                  cell: (index) => (
+                    <Select
+                      control={control}
+                      name={`expenses.${index}.category`}
+                      placeholder="Select category"
+                      options={[
+                        { label: 'Travel', value: 'travel' },
+                        { label: 'Meals', value: 'meals' },
+                        { label: 'Supplies', value: 'supplies' },
+                      ]}
+                    />
+                  ),
+                },
+              ]}
+            />
+          </CardContent>
+        </Card>
+      </div>
 
       <div className="w-full max-w-2xl mt-8">
         <h2 className="text-xl font-semibold mb-4 text-center">Users</h2>
