@@ -13,8 +13,8 @@ export interface User {
 }
 
 class UserService extends BaseService<User> {
-    protected endpoint = '/users'
-    protected queryKey = 'users'
+    protected endpoint = '/users' // API endpoint
+    protected queryKey = 'users' // Query key
 }
 
 export const userService = new UserService()

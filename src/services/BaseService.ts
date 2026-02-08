@@ -57,7 +57,7 @@ export abstract class BaseService<T> {
         }
     }
 
-    // --- TanStack Query Options ---
+    // TanStack Query Options
 
     getAllOptions = () => {
         return queryOptions({
